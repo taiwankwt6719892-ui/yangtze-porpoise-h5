@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>天使有信 · 小豚浪里传书</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #d8f0f8;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            opacity: 0;
+            animation: fadeInBody 0.6s ease-in-out forwards;
+        }
+
+        @keyframes fadeInBody {
+            to { opacity: 1; }
+        }
+
+        /* 9:16 移动端竖屏舞台容器 */
+        .stage-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 56.25vh;
+            max-height: 177.78vw;
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            background-color: #d8f0f8;
+        }
+
+        /* 公共全屏图层 */
+        .page-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        /* ==================== 阶段一：加载页样式 ==================== */
+        #loadingPage {
+            z-index: 10;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .bg-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .loading-wrapper {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 92%;
+            z-index: 10;
+        }
+
+        .river-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1000 / 550; 
+        }
+
+        .river-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            mix-blend-mode: screen; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        #rippleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .loading-dolphin {
+            position: absolute;
+            width: 24%;
+            z-index: 4;
+            mix-blend-mode: screen; 
+            transform-origin: center center;
+            pointer-events: none;
+        }
+
+
+        /* ==================== 阶段二：封面页样式 ==================== */
+        #coverPage {
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none; 
+        }
+
+        /* 1. 封面背景底图 */
+        .cover-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* 2. 标题字：略微放大，保持参考图的上部视觉比例 */
+        .cover-title {
+            position: absolute;
+            top: 3.5%;
+            left: 50%;
+            width: 96%;
+            transform: translateX(-50%) translateY(-50px); 
+            opacity: 0;
+            z-index: 3;
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease-out;
+            object-fit: contain;
+        }
+
+        .cover-title.show {
+            transform: translateX(-50%) translateY(0); 
+            opacity: 1;
+        }
+
+        /* 3. 江豚：缩小并下移，给标题、按钮和跳跃动画留出安全间距 */
+        @keyframes floatDolphin {
+            0%, 100% { 
+                transform: translate(-50%, -50%) translateY(0px) rotate(0deg); 
+            }
+            50% { 
+                transform: translate(-50%, -50%) translateY(-10px) rotate(-2deg); 
+            }
+        }
+
+        .cover-dolphin {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            width: 58%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            transform-origin: center center;
+            object-fit: contain;
+            animation: floatDolphin 3.2s ease-in-out infinite;
+        }
+
+        /* 点击按钮时的江豚欢呼跳跃动画 */
+        @keyframes dolphinJump {
+            0%   { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            30%  { transform: translate(-50%, -64%) scale(1.12) rotate(-4deg); }
+            60%  { transform: translate(-50%, -46%) scale(0.96) rotate(2deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+
+        .cover-dolphin.jump {
+            animation: dolphinJump 0.6s ease-in-out !important;
+        }
+
+        /* 4. 开始投递按钮：放大并下移，贴近参考图的底部位置 */
+        .cover-btn {
+            position: absolute;
+            bottom: 1.5%;
+            left: 50%;
+            width: 82%;
+            transform: translateX(-50%);
+            z-index: 4;
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            object-fit: contain;
+        }
+
+        .cover-btn:active {
+            transform: translateX(-50%) scale(0.95);
+            filter: brightness(0.9);
+        }
+
+        /* 隐藏类 */
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* ==================== 阶段三：问卷页 ==================== */
+        #quizPage {
+            z-index: 6;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+
+        .quiz-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            z-index: 1;
+        }
+
+        .quiz-options {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+        }
+
+        .quiz-art {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            pointer-events: none;
+        }
+
+        .quiz-feedback-art {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            z-index: 4;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .24s ease;
+        }
+
+        .quiz-feedback-art.is-visible { opacity: 1; }
+
+        .quiz-option {
+            position: absolute;
+            left: 19%;
+            width: 70%;
+            height: 7.2%;
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: transparent;
+            cursor: pointer;
+            z-index: 6;
+            clip-path: polygon(2% 12%, 96% 0, 100% 48%, 97% 88%, 3% 100%, 0 54%);
+        }
+
+        .quiz-option[data-option="a"] { top: 50.0%; }
+        .quiz-option[data-option="b"] { top: 58.2%; }
+        .quiz-option[data-option="c"] { top: 66.5%; }
+        .quiz-option[data-option="d"] { top: 74.8%; }
+
+        .quiz-option:active { transform: scale(.98); }
+
+        .mist-transition {
+            position: absolute;
+            inset: 0;
+            z-index: 30;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .mist-transition::before,
+        .mist-transition::after {
+            content: "";
+            position: absolute;
+            top: -8%;
+            width: 62%;
+            height: 116%;
+            background:
+                radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.98) 0 14%, rgba(239,250,250,.92) 32%, rgba(210,241,244,.64) 58%, rgba(190,231,238,0) 78%),
+                radial-gradient(ellipse at 30% 65%, rgba(255,255,255,.8) 0 12%, rgba(211,241,245,0) 60%);
+            filter: blur(10px);
+            transition: transform 1.05s cubic-bezier(.65,0,.25,1), opacity .35s ease;
+        }
+
+        .mist-transition::before { left: -13%; transform: translateX(0) rotate(-4deg); }
+        .mist-transition::after { right: -13%; transform: translateX(0) rotate(4deg); }
+        .mist-transition.is-active { opacity: 1; }
+        .mist-transition.is-active::before { transform: translateX(-92%) rotate(-7deg); }
+        .mist-transition.is-active::after { transform: translateX(92%) rotate(7deg); }
+    </style>
+</head>
+<body>
+
+    <div class="stage-container">
+
+        <div class="page-layer" id="loadingPage">
+            <img src="bg.jpg" class="bg-map" alt="背景地图">
+            <div class="loading-wrapper">
+                <div class="river-container" id="riverTrack">
+                    <img src="river.png" class="river-img" alt="河道轨道">
+                    <canvas id="rippleCanvas"></canvas>
+                    <img src="dolphin.png" class="loading-dolphin" id="loadingDolphin" alt="江豚">
+                </div>
+            </div>
+        </div>
+
+        <div class="page-layer" id="coverPage">
+            <img src="cover_bg.jpg" class="cover-bg" alt="封面背景">
+
+            <img src="cover_title.png" class="cover-title" id="coverTitle" alt="天使有信标题">
+
+            <img src="cover_dolphin.png" class="cover-dolphin" id="coverDolphin" alt="封面江豚">
+
+            <img src="cover_btn.png" class="cover-btn" id="coverBtn" alt="开始投递">
+        </div>
+
+        <div class="page-layer" id="quizPage" aria-label="问卷页面">
+            <img src="quiz_bg.jpg" class="quiz-bg" alt="问卷背景">
+            <div class="quiz-options" role="group" aria-label="请选择信箱密码">
+                <img class="quiz-art" src="quiz_option_a.png" alt="A 选项">
+                <img class="quiz-art" src="quiz_option_b.png" alt="B 选项">
+                <img class="quiz-art" src="quiz_option_c.png" alt="C 选项">
+                <img class="quiz-art" src="quiz_option_d.png" alt="D 选项">
+                <img class="quiz-feedback-art" data-feedback="a" src="quiz_symbol_a_wrong.png" alt="A 错误状态">
+                <img class="quiz-feedback-art" data-feedback="b" src="quiz_symbol_b_correct.png" alt="B 正确状态">
+                <img class="quiz-feedback-art" data-feedback="c" src="quiz_symbol_c_wrong.png" alt="C 错误状态">
+                <img class="quiz-feedback-art" data-feedback="d" src="quiz_symbol_d_wrong.png" alt="D 错误状态">
+                <button class="quiz-option" data-option="a" data-correct="false" type="button" aria-label="A 先开发后保护"></button>
+                <button class="quiz-option" data-option="b" data-correct="true" type="button" aria-label="B 共抓大保护，不搞大开发"></button>
+                <button class="quiz-option" data-option="c" data-correct="false" type="button" aria-label="C 重开发轻保护"></button>
+                <button class="quiz-option" data-option="d" data-correct="false" type="button" aria-label="D 优先开发利用"></button>
+            </div>
+        </div>
+
+        <div class="mist-transition" id="mistTransition" aria-hidden="true"></div>
+
+    </div>
+
+    <script src="river/assets/audio.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // === 阶段一逻辑：加载页动画 (4秒) ===
+            const loadingPage = document.getElementById('loadingPage');
+            const coverPage = document.getElementById('coverPage');
+            const loadingDolphin = document.getElementById('loadingDolphin');
+            const riverTrack = document.getElementById('riverTrack');
+            const canvas = document.getElementById('rippleCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const DURATION = 4000; 
+
+            function resizeCanvas() {
+                canvas.width = riverTrack.clientWidth;
+                canvas.height = riverTrack.clientHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            const START_X = 10; 
+            const END_X = 82;   
+            const BASE_Y = 32;  
+            const JUMPS = 5.0;       
+            const JUMP_HEIGHT = 4.5; 
+            const MAX_ANGLE = 16;    
+
+            let startTime = null;
+            let particles = [];
+
+            class RippleParticle {
+                constructor(x, y, isBig) {
+                    this.x = x - 15 + (Math.random() * 8 - 4);
+                    this.y = y + (Math.random() * 6 - 3);
+                    this.radius = isBig ? (Math.random() * 3 + 3) : (Math.random() * 2 + 1);
+                    this.alpha = 0.85;
+                    this.speed = Math.random() * 0.4 + 0.2;
+                }
+                update() {
+                    this.radius += this.speed;
+                    this.alpha -= 0.03;
+                }
+                draw(ctx) {
+                    if (this.alpha <= 0) return;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(this.x - 2, this.y, Math.max(1, this.radius * 0.4), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(220, 245, 255, ${this.alpha * 0.8})`;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function animateLoading(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                
+                let t = Math.min(elapsed / DURATION, 1.0);
+                let progress = 1 - Math.pow(1 - t, 2); 
+
+                const currentX = START_X + (END_X - START_X) * progress;
+                const sOffset = -Math.sin(progress * Math.PI * 2 * JUMPS) * JUMP_HEIGHT;
+                const currentY = BASE_Y + sOffset;
+                const angle = -Math.cos(progress * Math.PI * 2 * JUMPS) * MAX_ANGLE;
+
+                loadingDolphin.style.left = `${currentX}%`;
+                loadingDolphin.style.top = `${currentY}%`;
+                loadingDolphin.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+
+                const trackW = riverTrack.clientWidth;
+                const trackH = riverTrack.clientHeight;
+                const dolphinPixelX = (currentX / 100) * trackW;
+                const dolphinPixelY = (currentY / 100) * trackH + (trackH * 0.06);
+
+                if (t < 1.0) {
+                    if (sOffset >= -1 && Math.random() < 0.8) {
+                        particles.push(new RippleParticle(dolphinPixelX, dolphinPixelY, true));
+                    } else if (Math.random() < 0.2) {
+                        particles.push(new RippleParticle(dolphinPixelX, dolphinPixelY, false));
+                    }
+                }
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.update();
+                    p.draw(ctx);
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+
+                if (t < 1.0) {
+                    requestAnimationFrame(animateLoading);
+                } else {
+                    transitionToCover();
+                }
+            }
+
+            requestAnimationFrame(animateLoading);
+
+            // 调试捷径：在控制台输入 showCoverNow() 可瞬间跳转到封面查看效果
+            window.showCoverNow = function() {
+                loadingPage.classList.add('hidden');
+                coverPage.style.opacity = '1';
+                coverPage.style.pointerEvents = 'auto';
+                coverTitle.classList.add('show');
+            }
+
+            const coverTitle = document.getElementById('coverTitle');
+            const coverPageDom = document.getElementById('coverPage');
+
+            function transitionToCover() {
+                loadingPage.classList.add('hidden');
+                coverPageDom.style.opacity = '1';
+                coverPageDom.style.pointerEvents = 'auto';
+
+                setTimeout(() => {
+                    coverTitle.classList.add('show');
+                }, 150);
+            }
+
+            // === 阶段二逻辑：封面交互响应 ===
+            const coverBtn = document.getElementById('coverBtn');
+            const coverDolphin = document.getElementById('coverDolphin');
+            const quizPage = document.getElementById('quizPage');
+            const mistTransition = document.getElementById('mistTransition');
+            const quizOptions = Array.from(document.querySelectorAll('.quiz-option'));
+            let quizLocked = false;
+            let wrongTimer = null;
+            const quizFeedback = Object.fromEntries([...document.querySelectorAll('.quiz-feedback-art')].map(node => [node.dataset.feedback, node]));
+            let quizAnswered = false;
+
+            function openQuizPage() {
+                if (quizLocked) return;
+                quizLocked = true;
+                coverDolphin.classList.remove('jump');
+                loadingPage.classList.add('hidden');
+                coverPage.style.opacity = '0';
+                coverPage.style.pointerEvents = 'none';
+                quizPage.style.opacity = '1';
+                quizPage.style.pointerEvents = 'auto';
+                mistTransition.classList.add('is-active');
+                window.setTimeout(() => mistTransition.classList.remove('is-active'), 1150);
+            }
+
+            coverBtn.addEventListener('click', () => {
+                if (window.H5Audio) window.H5Audio.delivery();
+                if (!coverDolphin.classList.contains('jump')) {
+                    coverDolphin.classList.add('jump');
+                    setTimeout(() => {
+                        coverDolphin.classList.remove('jump');
+                    }, 600); 
+                }
+                setTimeout(openQuizPage, 560);
+                console.log("点击了开始投递按钮，江豚完成了动态跳跃！");
+            });
+
+            quizOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    if (quizAnswered || wrongTimer) return;
+                    const feedback = quizFeedback[option.dataset.option];
+                    if (option.dataset.correct === 'true') {
+                        if (window.H5Audio) window.H5Audio.correct();
+                        feedback.classList.add('is-visible');
+                        quizAnswered = true;
+                        quizOptions.forEach(item => { item.disabled = true; });
+                        setTimeout(() => {
+                            window.location.href = 'letter/index.html';
+                        }, 800);
+                        return;
+                    }
+                    quizOptions.forEach(item => { item.disabled = true; });
+                    feedback.classList.add('is-visible');
+                    wrongTimer = setTimeout(() => {
+                        feedback.classList.remove('is-visible');
+                        window.setTimeout(() => {
+                            quizOptions.forEach(item => { item.disabled = false; });
+                            wrongTimer = null;
+                        }, 240);
+                    }, 800);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+

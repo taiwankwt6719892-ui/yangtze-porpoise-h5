@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>天使有信 · 解锁来信</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #d8f0f8;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            opacity: 0;
+            animation: fadeInPage 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeInPage {
+            to { opacity: 1; }
+        }
+
+        /* 9:16 移动端竖屏舞台 */
+        .stage-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 56.25vh;
+            max-height: 177.78vw;
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            background-color: #d8f0f8;
+        }
+
+        /* 1. 背景底图 (不响应点击) */
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            pointer-events: none; 
+        }
+
+        /* 2. 氛围粒子 Canvas 特效层 (全屏置顶，不响应点击) */
+        #effectCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none; 
+        }
+
+        /* 3. 信纸与手指的组合容器：持续晃动 (唯一点击响应区域) */
+        @keyframes continuousJiggle {
+            0% { transform: translate(-50%, -50%) rotate(0deg) translate(0, 0); }
+            25% { transform: translate(-50%, -50%) rotate(1.8deg) translate(5px, -6px); }
+            50% { transform: translate(-50%, -50%) rotate(-1.8deg) translate(-6px, 5px); }
+            75% { transform: translate(-50%, -50%) rotate(1.2deg) translate(4px, 6px); }
+            100% { transform: translate(-50%, -50%) rotate(0deg) translate(0, 0); }
+        }
+
+        .envelope-container {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            width: 88%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            cursor: pointer;
+            animation: continuousJiggle 4s ease-in-out infinite;
+            transition: opacity 0.5s ease;
+        }
+
+        /* 信纸图片 */
+        .envelope-img {
+            width: 100%;
+            display: block;
+            object-fit: contain;
+            filter: drop-shadow(0 14px 22px rgba(50, 110, 160, 0.2));
+        }
+
+        /* 4. 手指提示图层 */
+        .hand-icon {
+            position: absolute;
+            bottom: 15%;  
+            left: 32%;    
+            width: 55%;   
+            z-index: 5;
+            pointer-events: none; /* 让点击穿透给包裹容器 envelopeWrapper */
+            animation: handUpDown 0.8s infinite alternate ease-in-out;
+        }
+
+        /* 手指上下轻微浮动提示 */
+        @keyframes handUpDown {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(8px) scale(0.96); }
+        }
+
+        /* 5. 全屏视频图层 */
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            background-color: #000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .video-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* 视频结尾按钮：仅裁切透明空白，不修改原始素材 */
+        .letter-continue {
+            position: absolute;
+            left: 59%;
+            top: 87%;
+            width: 64%;
+            aspect-ratio: 630 / 148;
+            transform: translate(-50%, -50%);
+            z-index: 21;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+
+        .letter-continue.is-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .letter-continue-art {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-image: url('../letter_btn.png');
+            background-repeat: no-repeat;
+            background-size: 171.904762% 981.756757%;
+            background-position: 58.057395% 90.268199%;
+            pointer-events: none;
+        }
+
+        .letter-continue.is-visible .letter-continue-art {
+            animation: letterContinueFloat 1.6s ease-in-out 1s infinite;
+        }
+
+        @keyframes letterContinueFloat {
+            0%, 50%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-4px); }
+            75% { transform: translateY(4px); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stage-container">
+        <!-- 1. 背景底图 -->
+        <img src="letter_bg.jpg" class="bg-image" alt="背景图">
+
+        <!-- 2. 水花与星光粒子 Canvas 特效层 -->
+        <canvas id="effectCanvas"></canvas>
+
+        <!-- 3. ★ 点击交互核心区域：仅在此信纸与手指区域内点击有效 -->
+        <div class="envelope-container" id="envelopeWrapper">
+            <!-- 信纸主图 -->
+            <img src="envelope.png" class="envelope-img" alt="信纸">
+            
+            <!-- 手指提示图 -->
+            <img src="hand.png" class="hand-icon" id="handIcon" alt="点击提示">
+        </div>
+
+        <!-- 4. 全屏视频播放图层（播放完自然定格最后一帧） -->
+        <div class="video-container" id="videoWrapper">
+            <video id="letterVideo" 
+                   src="video.mp4" 
+                   preload="auto"
+                   playsinline 
+                   webkit-playsinline 
+                   x5-playsinline 
+                   x5-video-player-type="h5-page"
+                   x5-video-orientation="portrait">
+            </video>
+            <button class="letter-continue" id="letterContinueBtn" type="button"
+                    aria-label="点击此处，跟我出发" aria-hidden="true" disabled>
+                <span class="letter-continue-art" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+
+    <iframe id="riverFrame" title="长江四景 · 江豚信使" allow="autoplay" hidden style="position:fixed;inset:0;width:100%;height:100%;border:0;z-index:50;background:#eef3f2"></iframe>
+    <script src="../river/assets/audio.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const envelopeWrapper = document.getElementById('envelopeWrapper');
+            const canvas = document.getElementById('effectCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const videoWrapper = document.getElementById('videoWrapper');
+            const letterVideo = document.getElementById('letterVideo');
+
+            function resizeCanvas() {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // === 粒子特效系统：水花气泡 + 金色星光 ===
+            let particles = [];
+
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 4 + 1.5;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed - 1.2;
+
+                    this.size = Math.random() * 6 + 3.5;
+                    this.alpha = 1.0;
+                    this.decay = Math.random() * 0.02 + 0.015;
+                    
+                    this.type = Math.floor(Math.random() * 3);
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.04;
+                    this.alpha -= this.decay;
+                }
+
+                draw(ctx) {
+                    if (this.alpha <= 0) return;
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+
+                    if (this.type === 0) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.strokeStyle = '#5eb8f0';
+                        ctx.lineWidth = 1.8;
+                        ctx.stroke();
+                    } else if (this.type === 1) {
+                        ctx.beginPath();
+                        ctx.fillStyle = '#ffcf40';
+                        ctx.arc(this.x, this.y, this.size * 0.8, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+                }
+            }
+
+            function renderParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.update();
+                    p.draw(ctx);
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+                requestAnimationFrame(renderParticles);
+            }
+            requestAnimationFrame(renderParticles);
+
+            function createBurst(x, y) {
+                for (let i = 0; i < 30; i++) {
+                    particles.push(new Particle(x, y));
+                }
+            }
+
+            // ★ 仅在信纸/手指所在的 envelopeWrapper 区域点击时生效
+            envelopeWrapper.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止点击事件向上冒泡
+
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                // 1. 触发水花炸裂特效
+                createBurst(clickX, clickY);
+
+                // 2. 延迟 0.35 秒展现水花，然后淡入并自动播放视频
+                setTimeout(() => {
+                    videoWrapper.classList.add('active');
+                    
+                    letterVideo.play().catch(err => {
+                        console.log("视频播放受限：", err);
+                    });
+
+                    // 淡出并禁用信封区域
+                    envelopeWrapper.style.opacity = '0';
+                    envelopeWrapper.style.pointerEvents = 'none';
+                }, 350);
+            });
+
+            // 按实际播放进度显示按钮，暂停和缓冲不会提前触发。
+            const letterContinueBtn = document.getElementById('letterContinueBtn');
+            let journeyStarted = false;
+            function syncContinueButton() {
+                if (journeyStarted) return;
+                const nearEnd = Number.isFinite(letterVideo.duration)
+                    && letterVideo.duration > 0
+                    && letterVideo.currentTime > 0
+                    && letterVideo.duration - letterVideo.currentTime <= 2;
+                const visible = videoWrapper.classList.contains('active')
+                    && (letterVideo.ended || (!letterVideo.paused && nearEnd));
+                letterContinueBtn.classList.toggle('is-visible', visible);
+                letterContinueBtn.disabled = !visible;
+                letterContinueBtn.setAttribute('aria-hidden', String(!visible));
+            }
+
+            ['timeupdate', 'seeking', 'seeked', 'play', 'loadedmetadata',
+                'durationchange', 'emptied', 'ended'].forEach(eventName => {
+                letterVideo.addEventListener(eventName, syncContinueButton);
+            });
+            syncContinueButton();
+            letterContinueBtn.addEventListener('click', () => {
+                if (journeyStarted) return;
+                journeyStarted = true;
+                if (window.H5Audio) {
+                    window.H5Audio.departure();
+                    window.H5Audio.startBgm();
+                }
+                letterContinueBtn.disabled = true;
+                letterContinueBtn.setAttribute('aria-hidden', 'true');
+                letterVideo.pause();
+                window.setTimeout(() => {
+                    const frame = document.getElementById('riverFrame');
+                    frame.hidden = false;
+                    frame.src = '../river/index.html?embedded=1';
+                    document.querySelector('.stage-container').hidden = true;
+                    frame.focus();
+                }, 320);
+            });
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+/* All page artwork shares the same 941 × 1672 source canvas. */
+.porpoise-wrap.is-delivering{transition:none}
+.letter-dialog[hidden]{display:none}
+.letter-dialog{position:fixed;inset:0;z-index:20;display:grid;place-items:center;overscroll-behavior:none;touch-action:none;padding:24px 0}
+.letter-backdrop{position:absolute;inset:0;background:rgba(20,61,67,.13);opacity:0;transition:opacity .35s}
+.letter-dialog.is-visible .letter-backdrop{opacity:1}
+.letter-paper{position:relative;width:min(94vw,620px,calc((100vh - 32px)*.616));width:min(94vw,620px,calc((100dvh - 32px)*.616));aspect-ratio:810/1315;filter:drop-shadow(0 8px 12px rgba(30,61,55,.22));opacity:0;transform-origin:center;outline:none}
+.letter-pages{position:absolute;inset:0}
+.letter-page{position:absolute;inset:0;width:100%;height:100%;opacity:0;visibility:hidden;transform:translateX(0)}
+.letter-page.is-current{opacity:1;visibility:visible}
+.letter-control{position:absolute;z-index:2;border:0;background:transparent;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#526d64;touch-action:manipulation}
+.letter-control:focus-visible{outline:2px solid #537d77;outline-offset:3px;border-radius:24px}
+.letter-control:active{filter:brightness(.95)}
+.letter-return{left:5.93%;top:4.34%;width:20.86%;height:3.8%;min-height:24px}
+.letter-next{left:80.74%;top:83.57%;width:7.9%;height:5.02%;min-width:28px;min-height:28px}
+.letter-control canvas{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.letter-next.is-previous canvas{transform:rotate(180deg)}
+.letter-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.mailbox-hit.is-active .letter{animation:letterSend .45s ease-out forwards}
+.mailbox-hit.is-active::after{animation:mailPulse .45s ease-out}
+@media(prefers-reduced-motion:reduce){.letter-backdrop{transition:none}.mailbox-hit.is-active .letter{animation-duration:.01s}}

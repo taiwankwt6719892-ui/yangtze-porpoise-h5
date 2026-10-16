@@ -1,0 +1,70 @@
+{
+  "version": "v2.8",
+  "coordinateSystem": "640x4200, origin top-left",
+  "items": [
+    {
+      "id": "yichang",
+      "dataCity": "yichang",
+      "label": "三峡大坝",
+      "anchor": {
+        "x": 540,
+        "y": 886
+      },
+      "hitArea": {
+        "x": 492,
+        "y": 814,
+        "width": 96,
+        "height": 146
+      },
+      "url": "cities/yichang.html"
+    },
+    {
+      "id": "jingzhou",
+      "dataCity": "jingzhou",
+      "label": "荆州古城",
+      "anchor": {
+        "x": 212,
+        "y": 1864
+      },
+      "hitArea": {
+        "x": 164,
+        "y": 1792,
+        "width": 96,
+        "height": 146
+      },
+      "url": "cities/jingzhou.html"
+    },
+    {
+      "id": "jianli",
+      "dataCity": "jianli",
+      "label": "何王庙湿地",
+      "anchor": {
+        "x": 236,
+        "y": 2695
+      },
+      "hitArea": {
+        "x": 188,
+        "y": 2623,
+        "width": 96,
+        "height": 146
+      },
+      "url": "cities/jianli.html"
+    },
+    {
+      "id": "wuhan",
+      "dataCity": "wuhan",
+      "label": "黄鹤楼",
+      "anchor": {
+        "x": 154,
+        "y": 3832
+      },
+      "hitArea": {
+        "x": 106,
+        "y": 3760,
+        "width": 96,
+        "height": 146
+      },
+      "url": "cities/wuhan.html"
+    }
+  ]
+}
