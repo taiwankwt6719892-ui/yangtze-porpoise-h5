@@ -54,7 +54,9 @@
   show(true);
   function updatePage(){
     const riverPage=document.querySelector('.stage');
-    if(riverPage){button.dataset.page='river';}
+    if(document.body.classList.contains('final-letter-active')){button.dataset.page='final-letter';}
+    else if(document.body.classList.contains('recipient-active')){button.dataset.page='recipient';}
+    else if(riverPage){button.dataset.page='river';}
     else if(document.getElementById('letterVideo')){button.dataset.page=document.getElementById('videoWrapper')?.classList.contains('active')?'video':'envelope';}
     else {
       const visible=id=>{const el=document.getElementById(id);return el&&!el.classList.contains('hidden')&&getComputedStyle(el).pointerEvents!=='none';};
@@ -64,20 +66,23 @@
     button.hidden=button.dataset.page==='loading';
   }
   function layoutButton(){
-    const stage=document.querySelector('.stage-container:not([hidden]),.stage');
+    const finalLetter=button.dataset.page==='final-letter';
+    const recipient=button.dataset.page==='recipient'||finalLetter;
+    const stage=finalLetter?document.querySelector('.final-letter-scene'):recipient?document.querySelector('.recipient-scene'):document.querySelector('.stage-container:not([hidden]),.stage');
     button.hidden=!stage||button.dataset.page==='loading';
     if(!stage)return;
     const rect=stage.getBoundingClientRect();
     const isRiver=button.dataset.page==='river';
-    button.style.left=isRiver?`${Math.round(rect.right-52-12)}px`:`max(${Math.round(rect.left+14)}px,calc(env(safe-area-inset-left,0px) + 14px))`;
+    button.style.left=isRiver?`${Math.round(rect.right-52-12)}px`:recipient?`${Math.round(rect.right-44-12)}px`:`max(${Math.round(rect.left+14)}px,calc(env(safe-area-inset-left,0px) + 14px))`;
     button.style.right='auto';
-    const topInset=isRiver?12:button.dataset.page==='loading'?68:button.dataset.page==='quiz'?42:button.dataset.page==='cover'?34:button.dataset.page==='video'?26:30;
+    const topInset=(isRiver||recipient)?12:button.dataset.page==='loading'?68:button.dataset.page==='quiz'?42:button.dataset.page==='cover'?34:button.dataset.page==='video'?26:30;
     button.style.top=`max(${Math.round(Math.max(rect.top+topInset,topInset))}px,calc(env(safe-area-inset-top,0px) + ${topInset}px))`;
   }
   updatePage();
   layoutButton();
   addEventListener('resize',layoutButton,{passive:true});
   addEventListener('orientationchange',()=>setTimeout(layoutButton,80),{passive:true});
+  addEventListener('recipient-layout',()=>{updatePage();layoutButton();});
   new ResizeObserver(layoutButton).observe(document.querySelector('.stage-container,.stage'));
   new MutationObserver(records=>{
     if(records.every(record=>record.target===button||button.contains(record.target)))return;

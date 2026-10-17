@@ -1,9 +1,9 @@
 /* All eight PNGs use the same transparent 941 × 1672 canvas. */
 const letterCities = {
-  yichang: {name:'宜昌', pages:['assets/letters/yichang-1.png','assets/letters/yichang-2.png']},
-  jingzhou: {name:'荆州', pages:['assets/letters/jingzhou-1.png?v=20261017-aligned','assets/letters/jingzhou-2.png?v=20261017-aligned']},
-  jianli: {name:'监利', pages:['assets/letters/jianli-1.png','assets/letters/jianli-2.png']},
-  wuhan: {name:'武汉', pages:['assets/letters/wuhan-1.png','assets/letters/wuhan-2.png']}
+  yichang: {name:'宜昌', pages:['assets/letters/yichang-1.webp','assets/letters/yichang-2.webp']},
+  jingzhou: {name:'荆州', pages:['assets/letters/jingzhou-1.webp?v=20261017-aligned','assets/letters/jingzhou-2.webp?v=20261017-aligned']},
+  jianli: {name:'监利', pages:['assets/letters/jianli-1.webp','assets/letters/jianli-2.webp']},
+  wuhan: {name:'武汉', pages:['assets/letters/wuhan-1.webp','assets/letters/wuhan-2.webp']}
 };
 const Letters = (() => {
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -61,8 +61,8 @@ const Letters = (() => {
     canvas.getContext('2d').drawImage(image,x,y,w,h,0,0,canvas.width,canvas.height);
   }
   function prepareButtons(){return Promise.all([
-    paintButton('assets/letters/return-button.png',back,138,263,169,50),
-    paintButton('assets/letters/next-button.png',next,744,1304,64,66)
+    paintButton('assets/letters/return-button.webp',back,138,263,169,50),
+    paintButton('assets/letters/next-button.webp',next,744,1304,64,66)
   ]);}
   function sleep(ms){return new Promise(resolve=>setTimeout(resolve,reduceMotion.matches?0:ms));}
   async function animate(el,frames,options){

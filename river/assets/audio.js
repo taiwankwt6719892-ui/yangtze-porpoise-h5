@@ -1,14 +1,15 @@
 /* MP3 playback lives in the parent page so changing to the river view
    preserves the departure gesture and the long swimming track. */
 (() => {
-  const names=['unlock','delivery','correct','departure','mailbox','paper','page','back','setSwim','setMasterVolume','setBgmVolume','startBgm','setBgmEnabled','setBgmDucked','setVideoDucked','requestBgmState'];
+  const names=['unlock','delivery','correct','departure','mailbox','paper','page','back','receive','setTransitionDucked','setSwim','setMasterVolume','setBgmVolume','startBgm','setBgmEnabled','setBgmDucked','setVideoDucked','requestBgmState'];
   if(parent!==window&&new URLSearchParams(location.search).has('embedded')){
     window.H5Audio=Object.fromEntries(names.map(name=>[name,(...args)=>parent.postMessage({type:'porpoise-audio',name,args},'*')]));
     ['pointerdown','touchend','keydown'].forEach(type=>addEventListener(type,()=>window.H5Audio.unlock(),{passive:true}));
     return;
   }
   const audioBase=new URL('audio/',document.currentScript.src);
-  let ctx,master,sfx,bgm,noise,deliveryTrack,correctTrack,departureTrack,mailboxTrack,swimTrack,bgmTrack;
+  let ctx,master,sfx,bgm,noise,deliveryTrack,correctTrack,departureTrack,mailboxTrack,swimTrack,bgmTrack,receiveWaterTrack,receiveWaterTimer;
+  let transitionDucked=false;
   let masterVolume=.85,bgmVolume=.3375,speed=0,active=false,underwater=false,lastUpdate=0;
   let swimLevel=0,lastTick=performance.now(),priming=false,primed=false,departing=false;
   let bgmEnabled=true,bgmIntent=false,bgmDucked=false,videoDucked=false,bgmLevel=0,bgmPulseUntil=0;
@@ -16,7 +17,7 @@
   const cooldown=new Map();
   function track(filename,loop,initialLevel,bus=sfx){
     const media=new Audio(new URL(filename,audioBase).href);
-    media.preload='auto';media.loop=loop;media.setAttribute('playsinline','');
+    media.preload='none';media.loop=loop;media.setAttribute('playsinline','');
     // Local file origins cannot safely be read through MediaElementAudioSource.
     // HTTP(S) gain nodes also provide reliable fades on iOS.
     let gain=null,source=null;
@@ -47,7 +48,8 @@
     departureTrack=track('departure.mp3',false,.58);
     mailboxTrack=track('mailbox.mp3',false,.48);
     swimTrack=track('swim.mp3',true,0);
-    bgmTrack=track('bgm.mp3',false,0,bgm);
+    receiveWaterTrack=track('swim.mp3',false,.18);
+    bgmTrack=track('bgm-mobile.mp3',false,0,bgm);
     bgmTrack.media.addEventListener('playing',publishBgmState);
     bgmTrack.media.addEventListener('pause',publishBgmState);
     bgmTrack.media.addEventListener('ended',()=>{
@@ -79,6 +81,7 @@
     publishBgmState();
   }
   function setBgmDucked(value){bgmDucked=Boolean(value);}
+  function setTransitionDucked(value){transitionDucked=Boolean(value);}
   function setVideoDucked(value){videoDucked=Boolean(value);}
   function start(item){
     if(item.pending||!item.media.paused||performance.now()<item.retryAfter)return;
@@ -130,6 +133,15 @@
     }
     ready.then(ok=>{
       if(!ok||document.hidden)return;
+      if(name==='receive'){
+        mailboxTrack.media.currentTime=0;start(mailboxTrack);
+        receiveWaterTrack.media.currentTime=0;level(receiveWaterTrack,.18);start(receiveWaterTrack);
+        clearTimeout(receiveWaterTimer);
+        receiveWaterTimer=setTimeout(()=>{
+          level(receiveWaterTrack,0);
+          receiveWaterTimer=setTimeout(()=>receiveWaterTrack.media.pause(),120);
+        },600);
+      }
       if(name==='mailbox'){
         mailboxTrack.media.currentTime=0;
         start(mailboxTrack);
@@ -157,7 +169,7 @@
     const duration=bgmTrack.media.duration;
     const remaining=Number.isFinite(duration)?duration-bgmTrack.media.currentTime:Infinity;
     const loopFade=Math.max(0,Math.min(1,remaining/.8));
-    const bgmTarget=musicWanted?(bgmDucked?.4:1)*(videoDucked?.24:1)*(moving?.7:1)*(now<bgmPulseUntil?.65:1)*loopFade:0;
+    const bgmTarget=musicWanted?(bgmDucked?.4:1)*(transitionDucked?.6:1)*(videoDucked?.24:1)*(moving?.7:1)*(now<bgmPulseUntil?.65:1)*loopFade:0;
     bgmLevel+=(bgmTarget-bgmLevel)*(1-Math.exp(-dt/(bgmTarget>bgmLevel?450:180)));
     if(bgmLevel<.002&&bgmTarget===0)bgmLevel=0;
     level(bgmTrack,bgmLevel);
@@ -167,18 +179,19 @@
   },40);
   function stopAll(){
     active=false;swimLevel=0;
+    clearTimeout(receiveWaterTimer);receiveWaterTrack?.media.pause();
     if(!ctx)return;
     level(swimTrack,0);swimTrack.media.pause();bgmLevel=0;level(bgmTrack,0);bgmTrack.media.pause();deliveryTrack.media.pause();correctTrack.media.pause();departureTrack.media.pause();mailboxTrack.media.pause();departing=false;
     ctx.suspend().catch(()=>{});
   }
   const api={
-    unlock,setSwim,startBgm,setBgmEnabled,setBgmDucked,setVideoDucked,requestBgmState:publishBgmState,
+    unlock,setSwim,startBgm,setBgmEnabled,setBgmDucked,setTransitionDucked,setVideoDucked,requestBgmState:publishBgmState,
     setMasterVolume(value){masterVolume=Math.max(0,Math.min(1,value));if(master){master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.1);level(swimTrack,swimLevel);level(bgmTrack,bgmLevel);level(deliveryTrack,.46);level(correctTrack,.52);level(departureTrack,.58);level(mailboxTrack,.48);}},
     setBgmVolume(value){bgmVolume=Math.max(0,Math.min(1,value));if(bgm){bgm.gain.setTargetAtTime(bgmVolume,ctx.currentTime,.1);level(bgmTrack,bgmLevel);}},
     getBgmInput(){ensure();return {context:ctx,input:bgm};},
     getState(){return {state:ctx?.state||'uninitialized',active,speed,underwater,swimPlaying:!!swimTrack&&!swimTrack.media.paused,swimVolume:swimLevel,swimTime:swimTrack?.media.currentTime||0,swimDuration:swimTrack?.media.duration||0,bgmEnabled,bgmDucked,videoDucked,bgmPlaying:!!bgmTrack&&!bgmTrack.media.paused,bgmTime:bgmTrack?.media.currentTime||0,bgmDuration:bgmTrack?.media.duration||0,bgmLevel,bgmUrl:bgmTrack?.media.src,bgmError:bgmTrack?.error,deliveryUrl:deliveryTrack?.media.src,correctUrl:correctTrack?.media.src,departurePlaying:!!departureTrack&&!departureTrack.media.paused,departureDuration:departureTrack?.media.duration||0,departureUrl:departureTrack?.media.src,swimUrl:swimTrack?.media.src,swimError:swimTrack?.error};}
   };
-  ['delivery','correct','departure','mailbox','paper','page','back'].forEach(name=>api[name]=()=>play(name));
+  ['delivery','correct','departure','mailbox','paper','page','back','receive'].forEach(name=>api[name]=()=>play(name));
   window.H5Audio=api;
   ['pointerdown','touchend','keydown'].forEach(type=>addEventListener(type,()=>unlock(),{passive:true}));
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAll();else{ctx?.resume().catch(()=>{});if(bgmIntent&&bgmEnabled&&bgmTrack)start(bgmTrack);}});
