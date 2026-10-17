@@ -1,0 +1,16 @@
+.mailbox-beacon{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s}
+.mailbox-hit.is-guided .mailbox-beacon{opacity:1}
+.mailbox-beacon::before{content:'';position:absolute;inset:3% -14% -5%;border-radius:50%;background:radial-gradient(ellipse,rgba(229,255,235,.36),rgba(162,224,209,.18) 45%,transparent 72%);opacity:0}
+.mailbox-beacon::after{content:'';position:absolute;left:2%;right:2%;bottom:4%;height:25%;border:1px solid rgba(227,255,243,.75);border-radius:50%;box-shadow:0 0 9px rgba(183,238,218,.4);opacity:0}
+.mailbox-hit.is-guided .mailbox-beacon::before{animation:mailboxGuideGlow 6.5s ease-in-out infinite}
+.mailbox-hit.is-guided .mailbox-beacon::after{animation:mailboxGuideRipple 6.5s ease-out infinite}
+.mailbox-guide-envelope{position:absolute;left:50%;top:3%;width:17px;height:12px;border:1px solid #7cabb2;border-radius:2px;background:#fffbed;box-shadow:0 1px 4px rgba(43,108,114,.18);transform:translate(-50%,-100%) rotate(-6deg)}
+.mailbox-guide-envelope::after{content:'';position:absolute;left:3px;top:-1px;width:8px;height:7px;border-right:1px solid #94b8bd;border-bottom:1px solid #94b8bd;transform:rotate(45deg)}
+.mailbox-hit.is-guided .mailbox-guide-envelope{animation:mailboxGuideFloat 6.5s ease-in-out infinite}
+.mailbox-guide-tip{position:fixed;z-index:8;max-width:calc(100vw - 32px);padding:8px 12px;border:1px solid rgba(220,239,224,.65);border-radius:15px;background:rgba(255,253,241,.93);box-shadow:0 2px 9px rgba(48,97,101,.12);color:#416f78;font:12px/1.6 'Microsoft YaHei',sans-serif;text-align:center;pointer-events:none;opacity:0;transition:opacity .3s;transform:translateX(-50%)}
+.mailbox-guide-tip.is-visible{opacity:1}
+.mailbox-guide-tip[hidden]{display:none}
+@keyframes mailboxGuideGlow{0%,48%,100%{opacity:.18}16%,30%{opacity:1}}
+@keyframes mailboxGuideRipple{0%{opacity:0;transform:scale(.75)}8%{opacity:.8}30%{opacity:0;transform:scale(1.32)}100%{opacity:0;transform:scale(1.32)}}
+@keyframes mailboxGuideFloat{0%,40%,100%{transform:translate(-50%,-100%) rotate(-6deg)}15%{transform:translate(-50%,calc(-100% - 4px)) rotate(4deg)}27%{transform:translate(-50%,calc(-100% - 2px)) rotate(-3deg)}}
+@media(prefers-reduced-motion:reduce){.mailbox-hit.is-guided .mailbox-beacon::before,.mailbox-hit.is-guided .mailbox-beacon::after,.mailbox-hit.is-guided .mailbox-guide-envelope{animation:none}.mailbox-hit.is-guided .mailbox-beacon::before{opacity:.55}.mailbox-hit.is-guided .mailbox-beacon::after{opacity:.45}.mailbox-beacon,.mailbox-guide-tip{transition:none}}

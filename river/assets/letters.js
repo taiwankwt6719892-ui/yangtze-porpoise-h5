@@ -121,6 +121,7 @@ const Letters = (() => {
     const dx=from.left+from.width/2-(to.left+to.width/2);
     const dy=from.top+from.height*.34-(to.top+to.height/2);
     phase='opening';dialog.classList.add('is-visible');
+    dispatchEvent(new CustomEvent('city-letter-opened',{detail:{city}}));
     window.H5Audio?.paper();
     const a=await animate(paper,[
       {opacity:0,transform:`translate(${dx}px,${dy}px) scale(.07) rotate(-7deg)`},
