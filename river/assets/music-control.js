@@ -17,8 +17,8 @@
     .music-toggle.is-playing img{filter:drop-shadow(0 0 7px rgba(52,174,112,.65))}
     .music-toggle[data-page="river"].is-playing img{animation:musicBreath 2.8s ease-in-out infinite}
     .music-toggle[hidden]{display:none!important}
-    .music-toggle:not([data-page="river"]){width:48px;height:48px;display:grid;place-items:center;background:transparent}
-    .music-toggle:not([data-page="river"]) img{width:44px;height:44px;filter:saturate(.55) opacity(.78) drop-shadow(0 1px 2px rgba(63,91,103,.18))}
+    .music-toggle:not([data-page="river"]){width:44px;height:44px;display:grid;place-items:center;background:transparent}
+    .music-toggle:not([data-page="river"]) img{width:38px;height:38px;filter:saturate(.55) opacity(.78) drop-shadow(0 1px 2px rgba(63,91,103,.18))}
     .music-toggle:not([data-page="river"]).is-playing img{animation:musicWatercolor 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(237,104,95,.22))}
     .music-toggle[data-page="loading"]{background:rgba(255,255,255,.28)}
     .music-toggle[data-page="cover"]{background:rgba(255,255,255,.22)}
@@ -62,7 +62,7 @@
     const isRiver=button.dataset.page==='river';
     button.style.left=isRiver?`${Math.round(rect.right-52-12)}px`:`max(${Math.round(rect.left+14)}px,calc(env(safe-area-inset-left,0px) + 14px))`;
     button.style.right='auto';
-    const topInset=isRiver?12:button.dataset.page==='loading'?20:button.dataset.page==='quiz'?18:14;
+    const topInset=isRiver?12:button.dataset.page==='loading'?68:button.dataset.page==='quiz'?42:button.dataset.page==='cover'?34:button.dataset.page==='video'?26:30;
     button.style.top=`max(${Math.round(Math.max(rect.top+topInset,topInset))}px,calc(env(safe-area-inset-top,0px) + ${topInset}px))`;
   }
   updatePage();
