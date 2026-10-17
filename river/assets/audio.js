@@ -49,7 +49,7 @@
     mailboxTrack=track('mailbox.mp3',false,.48);
     swimTrack=track('swim.mp3',true,0);
     receiveWaterTrack=track('swim.mp3',false,.18);
-    bgmTrack=track('bgm.mp3',false,0,bgm);
+    bgmTrack=track('bgm.mp3?v=20261018-trim7',false,0,bgm);
     bgmTrack.media.addEventListener('playing',publishBgmState);
     bgmTrack.media.addEventListener('pause',publishBgmState);
     bgmTrack.media.addEventListener('ended',()=>{
