@@ -4,7 +4,7 @@
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const screen=document.createElement('section');
   screen.className='final-letter-screen';screen.hidden=true;screen.inert=true;screen.setAttribute('aria-label','你的专属来信');
-  screen.innerHTML=`<div class="final-letter-scene"><img class="final-letter-background" src="${assets}background.webp" alt="长江江景"><div class="final-letter-shade"></div><div class="final-letter-paper" role="img"><img class="final-letter-art" alt="天使来信，长江大保护十周年纪念"><img class="final-letter-name" alt=""><i class="final-letter-shimmer" aria-hidden="true"></i></div><button class="final-letter-save" type="button" aria-label="保存专属明信片"><img src="${assets}save-postcard.webp" alt="点击保存明信片"></button><button class="final-letter-return" type="button">← 返回上一步</button></div>`;
+  screen.innerHTML=`<div class="final-letter-scene"><img class="final-letter-background" src="${assets}background.jpg" alt="长江江景"><div class="final-letter-shade"></div><div class="final-letter-paper" role="img"><img class="final-letter-art" alt="天使来信，长江大保护十周年纪念"><img class="final-letter-name" alt=""><i class="final-letter-shimmer" aria-hidden="true"></i></div><button class="final-letter-save" type="button" aria-label="保存专属明信片"><img src="${assets}save-postcard.lossless.webp" alt="点击保存明信片"></button><button class="final-letter-return" type="button">← 返回上一步</button></div>`;
   document.body.appendChild(screen);
   const scene=screen.querySelector('.final-letter-scene'),paper=screen.querySelector('.final-letter-paper');
   const background=screen.querySelector('.final-letter-background'),shade=screen.querySelector('.final-letter-shade');
@@ -34,7 +34,7 @@
   function getTemplate(){
     if(templatePromise)return templatePromise;
     templatePromise=(async()=>{
-      let src=assets+'postcard.webp';
+      let src=assets+'postcard.lossless.webp';
       if(location.protocol==='file:'){
         if(!window.H5PostcardSource)await new Promise((resolve,reject)=>{
           const script=document.createElement('script');script.src=assets+'postcard-local.js';

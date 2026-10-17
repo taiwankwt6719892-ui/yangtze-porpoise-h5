@@ -4,11 +4,11 @@
   const assets='assets/recipient/';
   const entry=document.createElement('button');
   entry.type='button';entry.className='receive-letter';entry.setAttribute('aria-label','收下这封信');
-  entry.innerHTML=`<img src="${assets}receive-letter.webp" alt="" draggable="false">`;
+  entry.innerHTML=`<img src="${assets}receive-letter.lossless.webp" alt="" draggable="false">`;
   stage.appendChild(entry);
   const screen=document.createElement('section');
   screen.className='recipient-screen';screen.hidden=true;screen.setAttribute('aria-label','确认收信人');
-  screen.innerHTML=`<div class="recipient-scene"><img class="recipient-background" src="${assets}recipient-bg.webp" width="940" height="1672" alt="这封信，想寄给你。一路走过长江，我收集了沿途的故事。现在，想把这一路的记忆，寄到你手中。"><button class="recipient-return" type="button">← 返回江面</button><form class="recipient-form" novalidate><label class="recipient-field"><img src="${assets}recipient-field.webp" alt=""><input aria-label="收信人姓名" placeholder="写下你的名字……" maxlength="20" autocomplete="off" enterkeyhint="done" spellcheck="false" aria-describedby="recipientFeedback"></label><p id="recipientFeedback" class="recipient-feedback" role="status" aria-live="polite"></p><button class="recipient-confirm" type="submit"><img src="${assets}confirm-recipient.webp" alt="确认收信人"></button></form></div>`;
+  screen.innerHTML=`<div class="recipient-scene"><img class="recipient-background" src="${assets}recipient-bg.jpg" width="940" height="1672" alt="这封信，想寄给你。一路走过长江，我收集了沿途的故事。现在，想把这一路的记忆，寄到你手中。"><button class="recipient-return" type="button">← 返回江面</button><form class="recipient-form" novalidate><label class="recipient-field"><img src="${assets}recipient-field.lossless.webp" alt=""><input aria-label="收信人姓名" placeholder="写下你的名字……" maxlength="20" autocomplete="off" enterkeyhint="done" spellcheck="false" aria-describedby="recipientFeedback"></label><p id="recipientFeedback" class="recipient-feedback" role="status" aria-live="polite"></p><button class="recipient-confirm" type="submit"><img src="${assets}confirm-recipient.lossless.webp" alt="确认收信人"></button></form></div>`;
   document.body.appendChild(screen);
   const scene=screen.querySelector('.recipient-scene'),field=screen.querySelector('.recipient-field');
   const input=screen.querySelector('input'),confirm=screen.querySelector('.recipient-confirm');
