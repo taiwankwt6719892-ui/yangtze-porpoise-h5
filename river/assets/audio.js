@@ -1,7 +1,7 @@
 /* MP3 playback lives in the parent page so changing to the river view
    preserves the departure gesture and the long swimming track. */
 (() => {
-  const names=['unlock','delivery','correct','departure','mailbox','paper','page','back','setSwim','setMasterVolume','setBgmVolume','startBgm','setBgmEnabled','setBgmDucked','requestBgmState'];
+  const names=['unlock','delivery','correct','departure','mailbox','paper','page','back','setSwim','setMasterVolume','setBgmVolume','startBgm','setBgmEnabled','setBgmDucked','setVideoDucked','requestBgmState'];
   if(parent!==window&&new URLSearchParams(location.search).has('embedded')){
     window.H5Audio=Object.fromEntries(names.map(name=>[name,(...args)=>parent.postMessage({type:'porpoise-audio',name,args},'*')]));
     ['pointerdown','touchend','keydown'].forEach(type=>addEventListener(type,()=>window.H5Audio.unlock(),{passive:true}));
@@ -11,7 +11,7 @@
   let ctx,master,sfx,bgm,noise,deliveryTrack,correctTrack,departureTrack,mailboxTrack,swimTrack,bgmTrack;
   let masterVolume=.85,bgmVolume=.09,speed=0,active=false,underwater=false,lastUpdate=0;
   let swimLevel=0,lastTick=performance.now(),priming=false,primed=false,departing=false;
-  let bgmEnabled=true,bgmIntent=false,bgmDucked=false,bgmLevel=0,bgmPulseUntil=0;
+  let bgmEnabled=true,bgmIntent=false,bgmDucked=false,videoDucked=false,bgmLevel=0,bgmPulseUntil=0;
   try { bgmEnabled=localStorage.getItem('porpoise-bgm-enabled')!=='false'; } catch {}
   const cooldown=new Map();
   function track(filename,loop,initialLevel,bus=sfx){
@@ -77,6 +77,7 @@
     publishBgmState();
   }
   function setBgmDucked(value){bgmDucked=Boolean(value);}
+  function setVideoDucked(value){videoDucked=Boolean(value);}
   function start(item){
     if(item.pending||!item.media.paused||performance.now()<item.retryAfter)return;
     item.pending=true;
@@ -154,7 +155,7 @@
     const duration=bgmTrack.media.duration;
     const remaining=Number.isFinite(duration)?duration-bgmTrack.media.currentTime:Infinity;
     const loopFade=Math.max(0,Math.min(1,remaining/.8));
-    const bgmTarget=musicWanted?(bgmDucked?.4:1)*(moving?.7:1)*(now<bgmPulseUntil?.65:1)*loopFade:0;
+    const bgmTarget=musicWanted?(bgmDucked?.4:1)*(videoDucked?.24:1)*(moving?.7:1)*(now<bgmPulseUntil?.65:1)*loopFade:0;
     bgmLevel+=(bgmTarget-bgmLevel)*(1-Math.exp(-dt/(bgmTarget>bgmLevel?450:180)));
     if(bgmLevel<.002&&bgmTarget===0)bgmLevel=0;
     level(bgmTrack,bgmLevel);
@@ -169,11 +170,11 @@
     ctx.suspend().catch(()=>{});
   }
   const api={
-    unlock,setSwim,startBgm,setBgmEnabled,setBgmDucked,requestBgmState:publishBgmState,
+    unlock,setSwim,startBgm,setBgmEnabled,setBgmDucked,setVideoDucked,requestBgmState:publishBgmState,
     setMasterVolume(value){masterVolume=Math.max(0,Math.min(1,value));if(master){master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.1);level(swimTrack,swimLevel);level(bgmTrack,bgmLevel);level(deliveryTrack,.46);level(correctTrack,.52);level(departureTrack,.58);level(mailboxTrack,.48);}},
     setBgmVolume(value){bgmVolume=Math.max(0,Math.min(1,value));if(bgm){bgm.gain.setTargetAtTime(bgmVolume,ctx.currentTime,.1);level(bgmTrack,bgmLevel);}},
     getBgmInput(){ensure();return {context:ctx,input:bgm};},
-    getState(){return {state:ctx?.state||'uninitialized',active,speed,underwater,swimPlaying:!!swimTrack&&!swimTrack.media.paused,swimVolume:swimLevel,swimTime:swimTrack?.media.currentTime||0,swimDuration:swimTrack?.media.duration||0,bgmEnabled,bgmDucked,bgmPlaying:!!bgmTrack&&!bgmTrack.media.paused,bgmTime:bgmTrack?.media.currentTime||0,bgmDuration:bgmTrack?.media.duration||0,bgmLevel,bgmUrl:bgmTrack?.media.src,bgmError:bgmTrack?.error,deliveryUrl:deliveryTrack?.media.src,correctUrl:correctTrack?.media.src,departurePlaying:!!departureTrack&&!departureTrack.media.paused,departureDuration:departureTrack?.media.duration||0,departureUrl:departureTrack?.media.src,swimUrl:swimTrack?.media.src,swimError:swimTrack?.error};}
+    getState(){return {state:ctx?.state||'uninitialized',active,speed,underwater,swimPlaying:!!swimTrack&&!swimTrack.media.paused,swimVolume:swimLevel,swimTime:swimTrack?.media.currentTime||0,swimDuration:swimTrack?.media.duration||0,bgmEnabled,bgmDucked,videoDucked,bgmPlaying:!!bgmTrack&&!bgmTrack.media.paused,bgmTime:bgmTrack?.media.currentTime||0,bgmDuration:bgmTrack?.media.duration||0,bgmLevel,bgmUrl:bgmTrack?.media.src,bgmError:bgmTrack?.error,deliveryUrl:deliveryTrack?.media.src,correctUrl:correctTrack?.media.src,departurePlaying:!!departureTrack&&!departureTrack.media.paused,departureDuration:departureTrack?.media.duration||0,departureUrl:departureTrack?.media.src,swimUrl:swimTrack?.media.src,swimError:swimTrack?.error};}
   };
   ['delivery','correct','departure','mailbox','paper','page','back'].forEach(name=>api[name]=()=>play(name));
   window.H5Audio=api;

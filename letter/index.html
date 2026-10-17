@@ -221,6 +221,7 @@
 
     <iframe id="riverFrame" title="长江四景 · 江豚信使" allow="autoplay" hidden style="position:fixed;inset:0;width:100%;height:100%;border:0;z-index:50;background:#eef3f2"></iframe>
     <script src="../river/assets/audio.js"></script>
+    <script src="../river/assets/music-control.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const envelopeWrapper = document.getElementById('envelopeWrapper');
@@ -229,6 +230,9 @@
             
             const videoWrapper = document.getElementById('videoWrapper');
             const letterVideo = document.getElementById('letterVideo');
+            const syncVideoMusic = () => window.H5Audio?.setVideoDucked(!letterVideo.paused && !letterVideo.ended);
+            ['play','playing','pause','ended','waiting'].forEach(name => letterVideo.addEventListener(name, syncVideoMusic));
+            syncVideoMusic();
 
             function resizeCanvas() {
                 canvas.width = canvas.clientWidth;
