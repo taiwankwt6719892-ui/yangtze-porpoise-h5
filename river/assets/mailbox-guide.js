@@ -5,16 +5,18 @@
   const visited=new Set();
   let introduced=false,active=null,frame=0,introTimer=0,hideTimer=0;
   try{introduced=sessionStorage.getItem('porpoise-mailbox-intro')==='1';JSON.parse(sessionStorage.getItem('porpoise-mailbox-visited')||'[]').forEach(id=>visited.add(id));}catch{}
-  const tip=document.createElement('div');tip.className='mailbox-guide-tip';tip.hidden=true;tip.setAttribute('role','status');tip.textContent='有一封来自宜昌的信，点邮箱打开吧';document.body.appendChild(tip);
+  const tip=document.createElement('div');tip.className='mailbox-guide-tip';tip.hidden=true;tip.setAttribute('role','status');tip.textContent='轻点邮箱，打开宜昌来信';document.body.appendChild(tip);
   for(const button of buttons){
     const beacon=document.createElement('span');beacon.className='mailbox-beacon';beacon.setAttribute('aria-hidden','true');beacon.innerHTML='<i class="mailbox-guide-envelope"></i>';button.appendChild(beacon);
   }
   function hideTip(){clearTimeout(introTimer);clearTimeout(hideTimer);tip.classList.remove('is-visible');tip.hidden=true;}
   function positionTip(){
     const r=active.getBoundingClientRect(),map=stage.getBoundingClientRect();
-    const width=Math.min(240,map.width-24);tip.style.width=width+'px';
-    tip.style.left=Math.max(map.left+width/2+12,Math.min(map.right-width/2-12,r.left+r.width/2))+'px';
-    tip.style.top=Math.min(innerHeight-70,r.bottom+10)+'px';
+    const width=Math.min(190,map.width-24);tip.style.width=width+'px';
+    const fitsBeside=r.left-map.left>width+20;
+    const center=fitsBeside?r.left-10-width/2:r.left+r.width/2;
+    tip.style.left=Math.max(map.left+width/2+12,Math.min(map.right-width/2-12,center))+'px';
+    tip.style.top=Math.min(innerHeight-70,fitsBeside?r.top+r.height*.55-16:r.bottom+8)+'px';
   }
   function update(){
     frame=0;let next=null,distance=Infinity;
@@ -32,7 +34,9 @@
         introTimer=setTimeout(()=>{
           if(active?.dataset.city!=='yichang'||stage.inert)return;
           introduced=true;try{sessionStorage.setItem('porpoise-mailbox-intro','1');}catch{}
-          tip.hidden=false;positionTip();tip.classList.add('is-visible');hideTimer=setTimeout(hideTip,4200);
+          tip.hidden=false;positionTip();tip.classList.add('is-visible');hideTimer=setTimeout(()=>{
+            tip.classList.remove('is-visible');hideTimer=setTimeout(()=>{tip.hidden=true;},650);
+          },4200);
         },500);
       }
     }
