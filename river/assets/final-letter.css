@@ -17,14 +17,16 @@
 .final-letter-return{position:absolute;left:3%;top:2.5%;min-height:32px;border:1px solid rgba(235,249,251,.32);background:rgba(25,60,70,.58);color:#effcff;border-radius:20px;padding:6px 11px;cursor:pointer;font:12px/1.3 'Microsoft YaHei',sans-serif;touch-action:manipulation}
 .letter-edge-spark{position:absolute;width:3px;height:3px;background:#fffbe1;border-radius:50%;box-shadow:0 0 7px 2px rgba(255,249,210,.5);opacity:0;pointer-events:none}
 .postcard-preview{position:fixed;inset:0;z-index:80;height:var(--final-visible-height,100dvh);overflow:auto;overscroll-behavior:contain;background:rgba(6,17,21,.94);display:flex;flex-direction:column;align-items:center;gap:14px;padding:max(20px,env(safe-area-inset-top,0px)) 16px max(20px,env(safe-area-inset-bottom,0px));box-sizing:border-box;-webkit-overflow-scrolling:touch}
-.postcard-preview-bar{width:min(100%,620px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none}
+.postcard-preview-bar{width:min(100%,620px);display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;flex-wrap:wrap}
 .postcard-preview button,.postcard-download{border:1px solid rgba(215,244,251,.38);background:rgba(255,255,255,.08);border-radius:22px;padding:8px 13px;color:#e5f6fa;font:13px/1.3 'Microsoft YaHei',sans-serif;cursor:pointer;text-decoration:none;touch-action:manipulation}
-.postcard-image{display:block;flex:none;width:auto;height:auto;max-width:min(100%,620px);max-height:calc(var(--final-visible-height,100svh) - 160px);object-fit:contain;margin:auto 0;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35));-webkit-touch-callout:default;user-select:auto}
+.postcard-image{display:block;flex:none;width:auto;height:auto;max-width:min(100%,620px);max-height:calc(var(--final-visible-height,100svh) - 210px);object-fit:contain;margin:auto 0;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35));-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;touch-action:auto}
 .postcard-instructions{margin:0;text-align:center;color:#e1eff1;font:14px/1.6 'Microsoft YaHei',sans-serif;flex:none}
 .postcard-preview .desktop-instruction{display:none}
 body.poster-preview-active .music-toggle,body.final-letter-opening .music-toggle{visibility:hidden}
 @media(hover:hover) and (pointer:fine){.postcard-preview .mobile-instruction{display:none}.postcard-preview .desktop-instruction{display:inline}}
-@media(hover:none),(pointer:coarse){.postcard-download{display:none}}
+.postcard-share[hidden]{display:none!important}
+.postcard-save-help{width:min(100%,620px);margin:0;color:#b8cbd0;font:12px/1.65 'Microsoft YaHei',sans-serif;text-align:center;flex:none}
+.postcard-save-help:empty{display:none}
 @keyframes saveLetterBreath{0%,18%,100%{transform:scale(1)}9%{transform:scale(1.025);filter:drop-shadow(0 0 6px rgba(161,223,242,.4))}}
 @keyframes saveLetterGlint{0%,100%{opacity:0}45%{opacity:.65}}
 @media(prefers-reduced-motion:reduce){.final-letter-save.is-ready,.final-letter-save.is-ready::after{animation:none}}

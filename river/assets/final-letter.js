@@ -12,10 +12,16 @@
   const save=screen.querySelector('.final-letter-save'),back=screen.querySelector('.final-letter-return');
   const preview=document.createElement('section');preview.className='postcard-preview';preview.hidden=true;preview.inert=true;
   preview.setAttribute('role','dialog');preview.setAttribute('aria-modal','true');preview.setAttribute('aria-label','保存专属明信片');
-  preview.innerHTML='<div class="postcard-preview-bar"><button type="button">← 返回来信</button><a class="postcard-download">下载明信片 PNG</a></div><img class="postcard-image" alt=""><p class="postcard-instructions"><span class="mobile-instruction">长按图片保存</span><span class="desktop-instruction">点击上方按钮下载，或右键保存图片</span></p>';
+  preview.innerHTML='<div class="postcard-preview-bar"><button type="button">← 返回来信</button><a class="postcard-download">下载原图</a><button class="postcard-share" type="button" hidden>系统分享／保存</button></div><img class="postcard-image" alt=""><p class="postcard-instructions"><span class="mobile-instruction">长按图片保存，也可尝试上方下载原图</span><span class="desktop-instruction">点击上方按钮下载，或右键保存图片</span></p><p class="postcard-save-help" role="status" aria-live="polite"></p>';
   document.body.appendChild(preview);
   const poster=preview.querySelector('.postcard-image'),previewBack=preview.querySelector('button'),download=preview.querySelector('a');
-  let phase='closed',templatePromise,assetsPromise,blobURL=null,lastName='',lastNameLayer='',currentName='';
+  const share=preview.querySelector('.postcard-share'),saveHelp=preview.querySelector('.postcard-save-help');
+  const inWechat=/MicroMessenger/i.test(navigator.userAgent);
+  let phase='closed',templatePromise,assetsPromise,blobURL=null,posterDataURL='',posterFile=null,lastName='',lastNameLayer='',currentName='';
+  const wechatHelp='若微信提示保存失败，请点微信右上角“…”选择在浏览器打开，再生成并下载原图；如系统询问权限，请允许保存照片或文件。';
+  function readBlob(blob){
+    return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('图片读取失败，请重试'));reader.readAsDataURL(blob);});
+  }
   const animations=new Set();
   function animate(el,frames,options){
     const a=el.animate(frames,{fill:'both',...options});animations.add(a);return a.finished.catch(()=>{});
@@ -54,7 +60,7 @@
   }
   async function generate(name){
     const image=await getTemplate();
-    if(blobURL&&lastName===name)return {url:blobURL,nameLayer:lastNameLayer,template:image.src};
+    if(blobURL&&lastName===name)return {url:blobURL,preview:posterDataURL,nameLayer:lastNameLayer,template:image.src};
     await document.fonts.ready;
     const textCanvas=document.createElement('canvas');textCanvas.width=640;textCanvas.height=150;
     const text=textCanvas.getContext('2d');let size=92;
@@ -67,9 +73,13 @@
     const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,2347,3340);ctx.drawImage(textCanvas,800,2350);
     const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('图片生成失败')),'image/png'));
     canvas.width=canvas.height=1;textCanvas.width=textCanvas.height=1;
+    // Inline PNG avoids blob URL handoff failures in some WeChat/HarmonyOS image menus.
+    const dataURL=await readBlob(blob);
+    const filename=`长江来信-${name.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'').slice(0,20)||'收信人'}.png`;
+    const file=typeof File==='function'?new File([blob],filename,{type:'image/png'}):null;
     const url=URL.createObjectURL(blob);if(blobURL)URL.revokeObjectURL(blobURL);
-    blobURL=url;lastName=name;lastNameLayer=nameLayer;
-    return {url,nameLayer,template:image.src};
+    blobURL=url;posterDataURL=dataURL;posterFile=file;lastName=name;lastNameLayer=nameLayer;
+    return {url,preview:dataURL,nameLayer,template:image.src};
   }
   function resize(){
     if(phase==='closed')return;
@@ -85,7 +95,9 @@
     phase='preparing';
     try{
       const [,result]=await Promise.all([preload(),generate(name)]);
-      currentName=name;art.src=result.template;nameImage.src=result.nameLayer;poster.src=result.url;download.href=result.url;
+      currentName=name;art.src=result.template;nameImage.src=result.nameLayer;poster.src=result.preview;download.href=result.url;
+      try{share.hidden=!(posterFile&&navigator.canShare?.({files:[posterFile]}));}catch{share.hidden=true;}
+      saveHelp.textContent=inWechat?wechatHelp:'';
       download.download=`长江来信-${name.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'').slice(0,20)||'收信人'}.png`;
       paper.setAttribute('aria-label',`天使来信，收信人：${name}。从宜昌到武汉，我把一路的故事寄给你。`);
       poster.alt=`寄给${name}的专属长江来信`;
@@ -139,6 +151,14 @@
     phase='preview-closing';await animate(preview,[{opacity:1},{opacity:0}],{duration:reduced.matches?1:180});
     preview.hidden=true;preview.inert=true;cleanAnimations();screen.inert=false;document.body.classList.remove('poster-preview-active');phase='letter';save.classList.add('is-ready');save.focus({preventScroll:true});
   }
+  share.addEventListener('click',async()=>{
+    if(!posterFile||share.disabled)return;
+    share.disabled=true;
+    try{await navigator.share({files:[posterFile]});}
+    catch(error){if(error.name!=='AbortError')saveHelp.textContent=inWechat?wechatHelp:'系统分享暂不可用，请长按图片保存，或使用“下载原图”。';}
+    finally{share.disabled=false;}
+  });
+  download.addEventListener('click',()=>{saveHelp.textContent=inWechat?wechatHelp:'若未弹出保存提示，请检查浏览器下载列表，或长按图片保存。';});
   save.addEventListener('click',openPreview);back.addEventListener('click',returnToInput);previewBack.addEventListener('click',closePreview);
   screen.addEventListener('keydown',event=>{if(event.key==='Escape'&&phase==='letter')returnToInput();});
   preview.addEventListener('keydown',event=>{if(event.key==='Escape')closePreview();});

@@ -353,8 +353,8 @@
 
     </div>
 
-    <script src="river/assets/audio.js?v=20261018-quality"></script>
-    <script src="river/assets/music-control.js?v=20261018-quality"></script>
+    <script src="river/assets/audio.js?v=20261018-savefix"></script>
+    <script src="river/assets/music-control.js?v=20261018-savefix"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // === 阶段一逻辑：加载页动画 (4秒) ===
@@ -536,7 +536,7 @@
                         quizAnswered = true;
                         quizOptions.forEach(item => { item.disabled = true; });
                         setTimeout(() => {
-                            window.location.href = 'letter/index.html?v=20261018-quality';
+                            window.location.href = 'letter/index.html?v=20261018-savefix';
                         }, 800);
                         return;
                     }
