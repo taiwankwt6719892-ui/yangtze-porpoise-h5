@@ -1,7 +1,7 @@
 /* All eight PNGs use the same transparent 941 × 1672 canvas. */
 const letterCities = {
   yichang: {name:'宜昌', pages:['assets/letters/yichang-1.png','assets/letters/yichang-2.png']},
-  jingzhou: {name:'荆州', pages:['assets/letters/jingzhou-1.png','assets/letters/jingzhou-2.png']},
+  jingzhou: {name:'荆州', pages:['assets/letters/jingzhou-1.png?v=20261017-aligned','assets/letters/jingzhou-2.png?v=20261017-aligned']},
   jianli: {name:'监利', pages:['assets/letters/jianli-1.png','assets/letters/jianli-2.png']},
   wuhan: {name:'武汉', pages:['assets/letters/wuhan-1.png','assets/letters/wuhan-2.png']}
 };
