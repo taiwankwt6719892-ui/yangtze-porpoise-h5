@@ -3,12 +3,12 @@
   button.className='music-toggle';
   button.type='button';
   const assetBase=new URL('./',document.currentScript.src);
-  button.innerHTML='<img alt="">';
+  button.innerHTML='<img alt=""><i class="music-spark spark-a" aria-hidden="true"></i><i class="music-spark spark-b" aria-hidden="true"></i>';
   const icon=button.querySelector('img');
   const grayIcon=new URL('music-icon.png',assetBase).href;
   const greenIcon=new URL('music-icon-playing.png',assetBase).href;
-  const introIcon=new URL('music-icon-intro.png',assetBase).href;
-  const introPlayingIcon=new URL('music-icon-intro-playing.png',assetBase).href;
+  const introIcon=new URL('music-note-white.png',assetBase).href;
+  const introPlayingIcon=new URL('music-note-yellow.png',assetBase).href;
   document.body.appendChild(button);
 
   const style=document.createElement('style');
@@ -18,9 +18,15 @@
     .music-toggle.is-playing img{filter:drop-shadow(0 0 7px rgba(52,174,112,.65))}
     .music-toggle[data-page="river"].is-playing img{animation:musicBreath 2.8s ease-in-out infinite}
     .music-toggle[hidden]{display:none!important}
-    .music-toggle:not([data-page="river"]){width:44px;height:44px;display:grid;place-items:center;background:transparent}
+    .music-toggle:not([data-page="river"]){width:44px;height:44px;display:grid;place-items:center;background:transparent;border-radius:50%}
+    .music-toggle:not([data-page="river"])::before{content:"";position:absolute;inset:3px;border-radius:50%;background:rgba(155,163,166,.55);pointer-events:none}
     .music-toggle:not([data-page="river"]) img{width:38px;height:38px;filter:drop-shadow(0 1px 2px rgba(63,91,103,.16))}
-    .music-toggle:not([data-page="river"]).is-playing img{animation:musicIntroHop 2.8s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(136,184,199,.28))}
+    .music-toggle:not([data-page="river"]).is-playing::before{box-shadow:0 0 7px rgba(242,212,122,.2)}
+    .music-toggle:not([data-page="river"]).is-playing img{animation:musicIntroHop 2.8s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(242,212,122,.35))}
+    .music-spark{position:absolute;width:3px;height:3px;background:#f2d47a;clip-path:polygon(50% 0,65% 35%,100% 50%,65% 65%,50% 100%,35% 65%,0 50%,35% 35%);opacity:0;pointer-events:none}
+    .spark-a{top:3px;right:5px}.spark-b{bottom:6px;left:4px}
+    .music-toggle:not([data-page="river"]).is-playing .spark-a{animation:sparkTwinkle 1.8s ease-in-out infinite}
+    .music-toggle:not([data-page="river"]).is-playing .spark-b{animation:sparkTwinkle 1.8s .7s ease-in-out infinite}
     .music-toggle[data-page="loading"]{background:rgba(255,255,255,.28)}
     .music-toggle[data-page="cover"]{background:rgba(255,255,255,.22)}
     .music-toggle[data-page="quiz"]{background:rgba(255,255,255,.3)}
@@ -28,8 +34,9 @@
     .music-toggle[data-page="river"]{background:rgba(255,255,255,.16)}
     .music-toggle:not([data-page="river"]){background:transparent}
     @keyframes musicBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-    @keyframes musicIntroHop{0%,30%,60%,100%{transform:translateY(0)}45%{transform:translateY(-2px)}}
-    @media(prefers-reduced-motion:reduce){.music-toggle.is-playing img{animation:none!important}}
+    @keyframes musicIntroHop{0%,22%,75%,100%{transform:translate(0,0) rotate(0deg)}35%{transform:translate(-1px,-2px) rotate(-3deg)}48%{transform:translate(1px,1px) rotate(3deg)}62%{transform:translate(0,-1px) rotate(-1deg)}}
+    @keyframes sparkTwinkle{0%,100%{opacity:0;transform:scale(.5)}45%{opacity:.8;transform:scale(1)}60%{opacity:.15;transform:scale(.7)}}
+    @media(prefers-reduced-motion:reduce){.music-toggle.is-playing img,.music-toggle.is-playing .music-spark{animation:none!important}}
     .music-toggle:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}
   `;
   document.head.appendChild(style);
@@ -54,10 +61,11 @@
       button.dataset.page=visible('quizPage')?'quiz':visible('coverPage')?'cover':'loading';
     }
     show(enabled,playing);
+    button.hidden=button.dataset.page==='loading';
   }
   function layoutButton(){
     const stage=document.querySelector('.stage-container:not([hidden]),.stage');
-    button.hidden=!stage;
+    button.hidden=!stage||button.dataset.page==='loading';
     if(!stage)return;
     const rect=stage.getBoundingClientRect();
     const isRiver=button.dataset.page==='river';
@@ -91,6 +99,7 @@
     show(state?.bgmEnabled ?? true,state?.bgmPlaying ?? false);
     addEventListener('porpoise-bgm-state',event=>show(event.detail.enabled,event.detail.playing));
     const begin=event=>{
+      if(button.dataset.page==='loading')return;
       if(event.target.closest?.('.music-toggle'))return;
       window.H5Audio?.startBgm();
       removeEventListener('pointerdown',begin,true);

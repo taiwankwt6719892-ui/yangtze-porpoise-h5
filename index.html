@@ -462,11 +462,18 @@
             requestAnimationFrame(animateLoading);
 
             // 调试捷径：在控制台输入 showCoverNow() 可瞬间跳转到封面查看效果
+            let coverMusicStarted = false;
+            function startCoverMusic() {
+                if (coverMusicStarted) return;
+                coverMusicStarted = true;
+                window.H5Audio?.setBgmEnabled(true);
+            }
             window.showCoverNow = function() {
                 loadingPage.classList.add('hidden');
                 coverPage.style.opacity = '1';
                 coverPage.style.pointerEvents = 'auto';
                 coverTitle.classList.add('show');
+                startCoverMusic();
             }
 
             const coverTitle = document.getElementById('coverTitle');
@@ -476,6 +483,7 @@
                 loadingPage.classList.add('hidden');
                 coverPageDom.style.opacity = '1';
                 coverPageDom.style.pointerEvents = 'auto';
+                startCoverMusic();
 
                 setTimeout(() => {
                     coverTitle.classList.add('show');

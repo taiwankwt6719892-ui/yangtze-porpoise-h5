@@ -9,7 +9,7 @@
   }
   const audioBase=new URL('audio/',document.currentScript.src);
   let ctx,master,sfx,bgm,noise,deliveryTrack,correctTrack,departureTrack,mailboxTrack,swimTrack,bgmTrack;
-  let masterVolume=.85,bgmVolume=.09,speed=0,active=false,underwater=false,lastUpdate=0;
+  let masterVolume=.85,bgmVolume=.135,speed=0,active=false,underwater=false,lastUpdate=0;
   let swimLevel=0,lastTick=performance.now(),priming=false,primed=false,departing=false;
   let bgmEnabled=true,bgmIntent=false,bgmDucked=false,videoDucked=false,bgmLevel=0,bgmPulseUntil=0;
   try { bgmEnabled=localStorage.getItem('porpoise-bgm-enabled')!=='false'; } catch {}
@@ -62,6 +62,8 @@
     if(frame?.contentWindow)frame.contentWindow.postMessage(state,'*');
   }
   function startBgm(){
+    const loading=document.getElementById('loadingPage');
+    if(loading&&!loading.classList.contains('hidden'))return;
     bgmIntent=true;
     unlock();
     if(bgmEnabled&&bgmTrack&&!document.hidden)start(bgmTrack);
