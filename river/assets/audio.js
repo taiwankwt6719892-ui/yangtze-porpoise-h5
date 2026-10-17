@@ -9,7 +9,7 @@
   }
   const audioBase=new URL('audio/',document.currentScript.src);
   let ctx,master,sfx,bgm,noise,deliveryTrack,correctTrack,departureTrack,mailboxTrack,swimTrack,bgmTrack;
-  let masterVolume=.85,bgmVolume=.27,speed=0,active=false,underwater=false,lastUpdate=0;
+  let masterVolume=.85,bgmVolume=.3375,speed=0,active=false,underwater=false,lastUpdate=0;
   let swimLevel=0,lastTick=performance.now(),priming=false,primed=false,departing=false;
   let bgmEnabled=true,bgmIntent=false,bgmDucked=false,videoDucked=false,bgmLevel=0,bgmPulseUntil=0;
   try { bgmEnabled=localStorage.getItem('porpoise-bgm-enabled')!=='false'; } catch {}

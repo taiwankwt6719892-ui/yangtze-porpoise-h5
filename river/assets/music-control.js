@@ -21,9 +21,9 @@
     .music-toggle:not([data-page="river"]){width:44px;height:44px;display:grid;place-items:center;background:transparent;border-radius:50%}
     .music-toggle:not([data-page="river"])::before{content:"";position:absolute;inset:3px;border-radius:50%;background:rgba(155,163,166,.55);pointer-events:none}
     .music-toggle:not([data-page="river"]) img{width:38px;height:38px;filter:drop-shadow(0 1px 2px rgba(63,91,103,.16))}
-    .music-toggle:not([data-page="river"]).is-playing::before{box-shadow:0 0 7px rgba(137,202,211,.24)}
-    .music-toggle:not([data-page="river"]).is-playing img{animation:musicIntroHop 2.8s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(137,202,211,.42))}
-    .music-spark{position:absolute;width:3px;height:3px;background:#9bd5dc;clip-path:polygon(50% 0,65% 35%,100% 50%,65% 65%,50% 100%,35% 65%,0 50%,35% 35%);opacity:0;pointer-events:none}
+    .music-toggle:not([data-page="river"]).is-playing::before{box-shadow:0 0 7px rgba(137,202,170,.24)}
+    .music-toggle:not([data-page="river"]).is-playing img{animation:musicIntroHop 2.8s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(137,202,170,.42))}
+    .music-spark{position:absolute;width:3px;height:3px;background:#9bd9b5;clip-path:polygon(50% 0,65% 35%,100% 50%,65% 65%,50% 100%,35% 65%,0 50%,35% 35%);opacity:0;pointer-events:none}
     .spark-a{top:3px;right:5px}.spark-b{bottom:6px;left:4px}
     .music-toggle:not([data-page="river"]).is-playing .spark-a{animation:sparkTwinkle 1.8s ease-in-out infinite}
     .music-toggle:not([data-page="river"]).is-playing .spark-b{animation:sparkTwinkle 1.8s .7s ease-in-out infinite}
