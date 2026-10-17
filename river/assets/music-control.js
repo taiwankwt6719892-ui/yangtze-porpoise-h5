@@ -7,7 +7,8 @@
   const icon=button.querySelector('img');
   const grayIcon=new URL('music-icon.png',assetBase).href;
   const greenIcon=new URL('music-icon-playing.png',assetBase).href;
-  const watercolorIcon=new URL('music-icon-watercolor.png',assetBase).href;
+  const introIcon=new URL('music-icon-intro.png',assetBase).href;
+  const introPlayingIcon=new URL('music-icon-intro-playing.png',assetBase).href;
   document.body.appendChild(button);
 
   const style=document.createElement('style');
@@ -18,8 +19,8 @@
     .music-toggle[data-page="river"].is-playing img{animation:musicBreath 2.8s ease-in-out infinite}
     .music-toggle[hidden]{display:none!important}
     .music-toggle:not([data-page="river"]){width:44px;height:44px;display:grid;place-items:center;background:transparent}
-    .music-toggle:not([data-page="river"]) img{width:38px;height:38px;filter:saturate(.55) opacity(.78) drop-shadow(0 1px 2px rgba(63,91,103,.18))}
-    .music-toggle:not([data-page="river"]).is-playing img{animation:musicWatercolor 3s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(237,104,95,.22))}
+    .music-toggle:not([data-page="river"]) img{width:38px;height:38px;filter:drop-shadow(0 1px 2px rgba(63,91,103,.16))}
+    .music-toggle:not([data-page="river"]).is-playing img{animation:musicIntroHop 2.8s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(136,184,199,.28))}
     .music-toggle[data-page="loading"]{background:rgba(255,255,255,.28)}
     .music-toggle[data-page="cover"]{background:rgba(255,255,255,.22)}
     .music-toggle[data-page="quiz"]{background:rgba(255,255,255,.3)}
@@ -27,7 +28,7 @@
     .music-toggle[data-page="river"]{background:rgba(255,255,255,.16)}
     .music-toggle:not([data-page="river"]){background:transparent}
     @keyframes musicBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-    @keyframes musicWatercolor{0%,100%{transform:rotate(-3deg);filter:drop-shadow(0 0 3px rgba(237,104,95,.18))}50%{transform:rotate(3deg);filter:drop-shadow(0 0 6px rgba(237,104,95,.32))}}
+    @keyframes musicIntroHop{0%,30%,60%,100%{transform:translateY(0)}45%{transform:translateY(-2px)}}
     @media(prefers-reduced-motion:reduce){.music-toggle.is-playing img{animation:none!important}}
     .music-toggle:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}
   `;
@@ -37,7 +38,7 @@
   function show(value,isPlaying=false){
     enabled=Boolean(value);
     playing=Boolean(isPlaying);
-    icon.src=button.dataset.page==='river'?(playing&&enabled?greenIcon:grayIcon):watercolorIcon;
+    icon.src=button.dataset.page==='river'?(playing&&enabled?greenIcon:grayIcon):(playing&&enabled?introPlayingIcon:introIcon);
     button.classList.toggle('is-playing',playing&&enabled);
     button.setAttribute('aria-pressed',String(enabled));
     button.setAttribute('aria-label',enabled?'关闭背景音乐':'开启背景音乐');
