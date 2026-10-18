@@ -353,8 +353,8 @@
 
     </div>
 
-    <script src="river/assets/audio.js?v=20261018-audio-handoff"></script>
-    <script src="river/assets/music-control.js?v=20261018-audio-handoff"></script>
+    <script src="river/assets/audio.js?v=20261018-bgm-handoff"></script>
+    <script src="river/assets/music-control.js?v=20261018-bgm-handoff"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // === 阶段一逻辑：加载页动画 (4秒) ===
@@ -536,8 +536,13 @@
                         quizAnswered = true;
                         quizOptions.forEach(item => { item.disabled = true; });
                         setTimeout(() => {
-                            window.H5Audio?.saveBgmHandoff();
-                            window.location.href = 'letter/index.html?v=20261018-audio-handoff';
+                            const handoff = window.H5Audio?.saveBgmHandoff?.() || {};
+                            const audioParams = new URLSearchParams({
+                                bgmTime: String(Number.isFinite(handoff.time) ? handoff.time : 0),
+                                bgmEnabled: String(handoff.enabled !== false),
+                                bgmIntent: String(handoff.intent !== false)
+                            });
+                            window.location.href = 'letter/index.html?v=20261018-bgm-handoff&' + audioParams.toString();
                         }, 800);
                         return;
                     }

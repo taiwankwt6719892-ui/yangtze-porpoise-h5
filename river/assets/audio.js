@@ -15,7 +15,24 @@
   let bgmEnabled=true,bgmIntent=false,bgmDucked=false,videoDucked=false,bgmLevel=0,bgmPulseUntil=0;
   let bgmHandoff=null;
   try { bgmEnabled=localStorage.getItem('porpoise-bgm-enabled')!=='false'; } catch {}
-  try { bgmHandoff=JSON.parse(sessionStorage.getItem('porpoise-bgm-handoff')||'null'); } catch {}
+  function readBgmHandoff(){
+    const params=new URLSearchParams(location.search);
+    const queryTime=Number(params.get('bgmTime'));
+    if(Number.isFinite(queryTime))return {time:queryTime,enabled:params.get('bgmEnabled')!=='false',intent:params.get('bgmIntent')!=='false'};
+    for(const name of ['sessionStorage','localStorage']){
+      try{
+        const storage=window[name];
+        const value=JSON.parse(storage.getItem('porpoise-bgm-handoff')||'null');
+        if(value&&Number.isFinite(value.time)&&(!value.savedAt||Date.now()-value.savedAt<30*60*1000))return value;
+      }catch{}
+    }
+    return null;
+  }
+  try { bgmHandoff=readBgmHandoff(); } catch {}
+  // A handoff in the URL/storage is authoritative for the destination page.
+  // Apply it after localStorage initialization so an older preference cannot
+  // make a deliberately muted navigation appear enabled again.
+  if(bgmHandoff&&typeof bgmHandoff.enabled==='boolean') bgmEnabled=bgmHandoff.enabled;
   const cooldown=new Map();
   function track(filename,loop,initialLevel,bus=sfx){
     const media=new Audio(new URL(filename,audioBase).href);
@@ -52,6 +69,7 @@
     swimTrack=track('swim.mp3',true,0);
     receiveWaterTrack=track('swim.mp3',false,.18);
     bgmTrack=track('bgm.mp3?v=20261018-trim7',false,0,bgm);
+    if(bgmHandoff) { bgmTrack.media.preload='metadata'; bgmTrack.media.load(); }
     bgmTrack.media.addEventListener('loadedmetadata',()=>{
       if(!bgmHandoff||!Number.isFinite(bgmHandoff.time))return;
       bgmTrack.media.currentTime=Math.max(0,Math.min(bgmTrack.media.duration-.05,bgmHandoff.time));
@@ -76,12 +94,18 @@
     if(loading&&!loading.classList.contains('hidden'))return;
     bgmIntent=true;
     unlock();
-    if(bgmEnabled&&bgmTrack&&!document.hidden)start(bgmTrack);
+    if(bgmEnabled&&bgmTrack&&!document.hidden){
+      if(bgmHandoff&&!Number.isFinite(bgmTrack.media.duration)){bgmTrack.media.preload='metadata';bgmTrack.media.load();}
+      else start(bgmTrack);
+    }
     publishBgmState();
   }
   function saveBgmHandoff(){
     if(!bgmTrack)return;
-    try{sessionStorage.setItem('porpoise-bgm-handoff',JSON.stringify({time:bgmTrack.media.currentTime||0,enabled:bgmEnabled,intent:bgmIntent}));}catch{}
+    const value={time:bgmTrack.media.currentTime||0,enabled:bgmEnabled,intent:bgmIntent,savedAt:Date.now()};
+    try{sessionStorage.setItem('porpoise-bgm-handoff',JSON.stringify(value));}catch{}
+    try{localStorage.setItem('porpoise-bgm-handoff',JSON.stringify(value));}catch{}
+    return value;
   }
   function setBgmEnabled(value){
     bgmEnabled=Boolean(value);
@@ -205,6 +229,10 @@
   };
   ['delivery','correct','departure','mailbox','paper','page','back','receive'].forEach(name=>api[name]=()=>play(name));
   window.H5Audio=api;
+  // Create the destination audio track even for a muted handoff so its
+  // playhead can still be restored before the user chooses to resume.
+  if(bgmHandoff) ensure();
+  if(bgmHandoff?.enabled) setTimeout(()=>startBgm(),0);
   ['pointerdown','touchend','keydown'].forEach(type=>addEventListener(type,()=>unlock(),{passive:true}));
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAll();else{ctx?.resume().catch(()=>{});if(bgmIntent&&bgmEnabled&&bgmTrack)start(bgmTrack);}});
   addEventListener('pagehide',()=>{saveBgmHandoff();stopAll();});
