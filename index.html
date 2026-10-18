@@ -353,8 +353,8 @@
 
     </div>
 
-    <script src="river/assets/audio.js?v=20261018-porpoise-assets"></script>
-    <script src="river/assets/music-control.js?v=20261018-porpoise-assets"></script>
+    <script src="river/assets/audio.js?v=20261018-facing-corrected"></script>
+    <script src="river/assets/music-control.js?v=20261018-facing-corrected"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // === 阶段一逻辑：加载页动画 (4秒) ===
@@ -542,7 +542,7 @@
                                 bgmEnabled: String(handoff.enabled !== false),
                                 bgmIntent: String(handoff.intent !== false)
                             });
-                            window.location.href = 'letter/index.html?v=20261018-porpoise-assets&' + audioParams.toString();
+                            window.location.href = 'letter/index.html?v=20261018-facing-corrected&' + audioParams.toString();
                         }, 800);
                         return;
                     }
