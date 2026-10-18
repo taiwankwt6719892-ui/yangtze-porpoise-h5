@@ -16,7 +16,10 @@
     .music-toggle{position:fixed;z-index:60;top:12px;left:auto;right:12px;width:52px;height:52px;border:0;padding:0;background:rgba(255,255,255,.18);border-radius:50%;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:top .25s ease,left .25s ease,background .25s ease,opacity .25s ease}
     .music-toggle img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.28));pointer-events:none}
     .music-toggle.is-playing img{filter:drop-shadow(0 0 7px rgba(52,174,112,.65))}
-    .music-toggle[data-page="river"].is-playing img{animation:musicBreath 2.8s ease-in-out infinite}
+    .music-toggle[data-page="river"]{width:44px;height:44px;display:grid;place-items:center;background:transparent;border-radius:50%}
+    .music-toggle[data-page="river"]::before{content:"";position:absolute;inset:3px;border-radius:50%;background:rgba(45,56,58,.52);box-shadow:0 1px 5px rgba(23,47,52,.2);pointer-events:none}
+    .music-toggle[data-page="river"] img{width:38px;height:38px;filter:drop-shadow(0 1px 2px rgba(30,62,64,.16))}
+    .music-toggle[data-page="river"].is-playing img{animation:musicIntroHop 2.8s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(137,202,170,.42))}
     .music-toggle[hidden]{display:none!important}
     .music-toggle:not([data-page="river"]){width:44px;height:44px;display:grid;place-items:center;background:transparent;border-radius:50%}
     .music-toggle:not([data-page="river"])::before{content:"";position:absolute;inset:3px;border-radius:50%;background:rgba(155,163,166,.55);pointer-events:none}
@@ -31,7 +34,7 @@
     .music-toggle[data-page="cover"]{background:rgba(255,255,255,.22)}
     .music-toggle[data-page="quiz"]{background:rgba(255,255,255,.3)}
     .music-toggle[data-page="video"]{background:rgba(33,64,68,.38)}
-    .music-toggle[data-page="river"]{background:rgba(255,255,255,.16)}
+    .music-toggle[data-page="river"]{background:transparent}
     .music-toggle:not([data-page="river"]){background:transparent}
     @keyframes musicBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
     @keyframes musicIntroHop{0%,22%,75%,100%{transform:translate(0,0) rotate(0deg)}35%{transform:translate(-1px,-2px) rotate(-3deg)}48%{transform:translate(1px,1px) rotate(3deg)}62%{transform:translate(0,-1px) rotate(-1deg)}}
@@ -45,7 +48,7 @@
   function show(value,isPlaying=false){
     enabled=Boolean(value);
     playing=Boolean(isPlaying);
-    icon.src=button.dataset.page==='river'?(playing&&enabled?greenIcon:grayIcon):(playing&&enabled?introPlayingIcon:introIcon);
+    icon.src=button.dataset.page==='river'?(playing&&enabled?introPlayingIcon:introIcon):(playing&&enabled?introPlayingIcon:introIcon);
     button.classList.toggle('is-playing',playing&&enabled);
     button.setAttribute('aria-pressed',String(enabled));
     button.setAttribute('aria-label',enabled?'关闭背景音乐':'开启背景音乐');
@@ -73,7 +76,7 @@
     if(!stage)return;
     const rect=stage.getBoundingClientRect();
     const isRiver=button.dataset.page==='river';
-    button.style.left=isRiver?`${Math.round(rect.right-52-12)}px`:recipient?`${Math.round(rect.right-44-12)}px`:`max(${Math.round(rect.left+14)}px,calc(env(safe-area-inset-left,0px) + 14px))`;
+    button.style.left=isRiver?`${Math.round(rect.right-44-12)}px`:recipient?`${Math.round(rect.right-44-12)}px`:`max(${Math.round(rect.left+14)}px,calc(env(safe-area-inset-left,0px) + 14px))`;
     button.style.right='auto';
     const topInset=(isRiver||recipient)?12:button.dataset.page==='loading'?68:button.dataset.page==='quiz'?42:button.dataset.page==='cover'?34:button.dataset.page==='video'?26:30;
     button.style.top=`max(${Math.round(Math.max(rect.top+topInset,topInset))}px,calc(env(safe-area-inset-top,0px) + ${topInset}px))`;
