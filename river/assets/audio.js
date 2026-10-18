@@ -1,7 +1,7 @@
 /* MP3 playback lives in the parent page so changing to the river view
    preserves the departure gesture and the long swimming track. */
 (() => {
-  const names=['unlock','delivery','correct','departure','mailbox','paper','page','back','receive','setTransitionDucked','setSwim','setMasterVolume','setBgmVolume','startBgm','setBgmEnabled','setBgmDucked','setVideoDucked','requestBgmState'];
+  const names=['unlock','delivery','correct','departure','mailbox','paper','page','back','receive','setTransitionDucked','setSwim','setMasterVolume','setBgmVolume','startBgm','setBgmEnabled','setBgmDucked','setVideoDucked','requestBgmState','saveBgmHandoff'];
   if(parent!==window&&new URLSearchParams(location.search).has('embedded')){
     window.H5Audio=Object.fromEntries(names.map(name=>[name,(...args)=>parent.postMessage({type:'porpoise-audio',name,args},'*')]));
     ['pointerdown','touchend','keydown'].forEach(type=>addEventListener(type,()=>window.H5Audio.unlock(),{passive:true}));
@@ -13,7 +13,9 @@
   let masterVolume=.85,bgmVolume=.3375,speed=0,active=false,underwater=false,lastUpdate=0;
   let swimLevel=0,lastTick=performance.now(),priming=false,primed=false,departing=false;
   let bgmEnabled=true,bgmIntent=false,bgmDucked=false,videoDucked=false,bgmLevel=0,bgmPulseUntil=0;
+  let bgmHandoff=null;
   try { bgmEnabled=localStorage.getItem('porpoise-bgm-enabled')!=='false'; } catch {}
+  try { bgmHandoff=JSON.parse(sessionStorage.getItem('porpoise-bgm-handoff')||'null'); } catch {}
   const cooldown=new Map();
   function track(filename,loop,initialLevel,bus=sfx){
     const media=new Audio(new URL(filename,audioBase).href);
@@ -50,6 +52,12 @@
     swimTrack=track('swim.mp3',true,0);
     receiveWaterTrack=track('swim.mp3',false,.18);
     bgmTrack=track('bgm.mp3?v=20261018-trim7',false,0,bgm);
+    bgmTrack.media.addEventListener('loadedmetadata',()=>{
+      if(!bgmHandoff||!Number.isFinite(bgmHandoff.time))return;
+      bgmTrack.media.currentTime=Math.max(0,Math.min(bgmTrack.media.duration-.05,bgmHandoff.time));
+      bgmIntent=Boolean(bgmHandoff.intent);
+      if(bgmHandoff.enabled&&bgmEnabled)startBgm();
+    },{once:true});
     bgmTrack.media.addEventListener('playing',publishBgmState);
     bgmTrack.media.addEventListener('pause',publishBgmState);
     bgmTrack.media.addEventListener('ended',()=>{
@@ -70,6 +78,10 @@
     unlock();
     if(bgmEnabled&&bgmTrack&&!document.hidden)start(bgmTrack);
     publishBgmState();
+  }
+  function saveBgmHandoff(){
+    if(!bgmTrack)return;
+    try{sessionStorage.setItem('porpoise-bgm-handoff',JSON.stringify({time:bgmTrack.media.currentTime||0,enabled:bgmEnabled,intent:bgmIntent}));}catch{}
   }
   function setBgmEnabled(value){
     bgmEnabled=Boolean(value);
@@ -185,7 +197,7 @@
     ctx.suspend().catch(()=>{});
   }
   const api={
-    unlock,setSwim,startBgm,setBgmEnabled,setBgmDucked,setTransitionDucked,setVideoDucked,requestBgmState:publishBgmState,
+    unlock,setSwim,startBgm,setBgmEnabled,setBgmDucked,setTransitionDucked,setVideoDucked,requestBgmState:publishBgmState,saveBgmHandoff,
     setMasterVolume(value){masterVolume=Math.max(0,Math.min(1,value));if(master){master.gain.setTargetAtTime(masterVolume,ctx.currentTime,.1);level(swimTrack,swimLevel);level(bgmTrack,bgmLevel);level(deliveryTrack,.46);level(correctTrack,.52);level(departureTrack,.58);level(mailboxTrack,.48);}},
     setBgmVolume(value){bgmVolume=Math.max(0,Math.min(1,value));if(bgm){bgm.gain.setTargetAtTime(bgmVolume,ctx.currentTime,.1);level(bgmTrack,bgmLevel);}},
     getBgmInput(){ensure();return {context:ctx,input:bgm};},
@@ -195,7 +207,7 @@
   window.H5Audio=api;
   ['pointerdown','touchend','keydown'].forEach(type=>addEventListener(type,()=>unlock(),{passive:true}));
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAll();else{ctx?.resume().catch(()=>{});if(bgmIntent&&bgmEnabled&&bgmTrack)start(bgmTrack);}});
-  addEventListener('pagehide',stopAll);
+  addEventListener('pagehide',()=>{saveBgmHandoff();stopAll();});
   addEventListener('pageshow',()=>{if(ctx&&!document.hidden){ctx.resume().catch(()=>{});if(bgmIntent&&bgmEnabled)start(bgmTrack);}});
   addEventListener('message',event=>{
     const frame=document.getElementById('riverFrame'),data=event.data;
